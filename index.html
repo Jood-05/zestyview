@@ -1,81 +1,443 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR 3D Food Viewer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZestyView</title>
+
+  <!-- Model Viewer for AR -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
+      padding: 0;
+      background: #fff8f0;
+      text-align: center;
+    }
+    header {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      height: 100vh;
-      flex-direction: column;
+      padding: 20px;
+      background-color: #ff6347;
+      color: white;
+      flex-wrap: wrap;
     }
-    model-viewer {
-      width: 90%;
-      max-width: 600px;
-      height: 500px;
-      border-radius: 16px;
-      overflow: hidden;
-      background-color: #ffffff;
+    nav a {
+      margin: 10px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
     }
-    .ar-button {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 18px;
-      background: #ff6347;
+    h1 {
+      font-size: 3rem;
+      font-family: 'Cursive', sans-serif;
+      margin: 40px 0 10px;
+      color: white;
+    }
+    p {
+      font-size: 1.2rem;
+      color: white;
+      margin-bottom: 30px;
+      padding: 0 15px;
+    }
+    .order-btn, .nav-btn, .cart-btn, .pay-btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      background-color: #ff6347;
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 6px;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      margin: 10px;
+    }
+    .menu, .dishes, .cart, .payment { display: none; }
+    .thankyou { display: none; color: black; }
+    .dish-card {
+      background: #fff;
+      margin: 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      flex: 1 1 250px;
+      max-width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      text-align: left;
+      padding-bottom: 10px;
+    }
+    .dish-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    .dish-card h4 { margin: 10px 10px 5px; font-size: 1.1rem; }
+    .dish-card p { margin: 5px 10px; font-size: 0.95rem; }
+    .dish-card button {
+      background-color: #ff6347;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 6px 8px;
+      font-size: 0.95rem;
+    }
+    .home {
+      position: relative;
+      padding: 60px 20px;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .home video {
+      position: absolute;
+      top: 0; left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+      filter: brightness(0.6);
+    }
+    .dish-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+    }
+    .filter-section { margin: 20px; }
+    .badge {
+      background: #eee;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin: 2px;
+      font-size: 0.8rem;
+      display: inline-block;
+    }
+    .rating span {
+      font-size: 1.2rem;
+      color: gray;
+      cursor: pointer;
+    }
+    .rating span.active { color: gold; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; }
+
+    /* AR Viewer Overlay */
+    #ar-viewer {
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:#fff;
+      z-index:9999;
+    }
+    #ar-viewer model-viewer { width:100%; height:100%; }
+    #ar-close {
+      position:absolute;
+      top:20px;
+      right:20px;
+      padding:10px 20px;
+      background:#ff6347;
+      color:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+      z-index:10000;
     }
   </style>
 </head>
 <body>
+  <header>
+    <div><strong>ZestyView</strong></div>
+    <nav>
+      <a href="#" onclick="goHome()">Home</a>
+      <a href="#">About</a>
+      <a href="#">Settings</a>
+      <a href="#">Help</a>
+    </nav>
+  </header>
 
-<h2>🍕 View Your 3D Pizza in AR!</h2>
+  <main class="home">
+    <video autoplay muted loop>
+      <source src="background.mp4" type="video/mp4">
+    </video>
+    <h1>ZestyView</h1>
+    <p>Experience a variety of global cuisines from your seat. Order, customize, and pay with ease!</p>
+    <button class="order-btn" onclick="showMenu()">Order Now</button>
+  </main>
 
-<model-viewer
-    id="model"
-    src="pizza.glb"
-    alt="Delicious 3D Pizza"
-    ar
-    ar-placement="floor"
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    auto-rotate
-    shadow-intensity="1"
-    exposure="1"
-    style="background-color: #ffffff;">
-    
-    <!-- AR BUTTON -->
-    <button slot="ar-button" class="ar-button">
-      👁️ View in your space
-    </button>
+  <section class="menu">
+    <h2>Select Cuisine</h2>
+    <div class="filter-section">
+      <label><input type="checkbox" id="filter-nuts"> Nut-Free</label>
+      <label><input type="checkbox" id="filter-dairy"> Dairy-Free</label>
+    </div>
+    <button class="nav-btn" onclick="showDishes('indian')">Indian</button>
+    <button class="nav-btn" onclick="showDishes('chinese')">Chinese</button>
+    <button class="nav-btn" onclick="showDishes('korean')">Korean</button>
+    <button class="nav-btn" onclick="showDishes('italian')">Italian</button>
+    <button class="nav-btn" onclick="showDishes('desserts')">Desserts</button>
+  </section>
+
+  <!-- Indian -->
+  <section class="dishes" id="indian">
+    <h2>Indian Dishes</h2>
+    <div class="dish-container" id="indian-container"></div>
+    <button class="nav-btn" onclick="showMenu()">Back</button>
+    <button class="cart-btn" onclick="viewCart()">View Cart</button>
+  </section>
+
+  <!-- Chinese -->
+  <section class="dishes" id="chinese">
+    <h2>Chinese Dishes</h2>
+    <div class="dish-container" id="chinese-container"></div>
+    <button class="nav-btn" onclick="showMenu()">Back</button>
+    <button class="cart-btn" onclick="viewCart()">View Cart</button>
+  </section>
+
+  <!-- Korean -->
+  <section class="dishes" id="korean">
+    <h2>Korean Dishes</h2>
+    <div class="dish-container" id="korean-container"></div>
+    <button class="nav-btn" onclick="showMenu()">Back</button>
+    <button class="cart-btn" onclick="viewCart()">View Cart</button>
+  </section>
+
+  <!-- Italian -->
+  <section class="dishes" id="italian">
+    <h2>Italian Dishes</h2>
+    <div class="dish-container" id="italian-container"></div>
+    <button class="nav-btn" onclick="showMenu()">Back</button>
+    <button class="cart-btn" onclick="viewCart()">View Cart</button>
+  </section>
+
+  <!-- Desserts -->
+  <section class="dishes" id="desserts">
+    <h2>Desserts</h2>
+    <div class="dish-container" id="desserts-container"></div>
+    <button class="nav-btn" onclick="showMenu()">Back</button>
+    <button class="cart-btn" onclick="viewCart()">View Cart</button>
+  </section>
+
+  <section class="cart">
+    <h2>Your Cart</h2>
+    <ul id="cart-items"></ul>
+    <h3>Total: ₹<span id="total">0</span></h3>
+    <button class="pay-btn" onclick="showPayment()">Proceed to Payment</button>
+    <button class="nav-btn" onclick="showMenu()">Back to Menu</button>
+  </section>
+
+  <section class="payment">
+    <h2>Payment</h2>
+    <p>Enter your payment details (simulated)</p>
+    <button class="pay-btn" onclick="finishOrder()">Pay Now</button>
+  </section>
+
+  <section class="thankyou">
+    <h1 style="color: black;">Thank You!</h1>
+    <p style="color: black;">Your order at ZestyView has been placed successfully.</p>
+    <button class="order-btn" onclick="goHome()">Back to Order</button>
+  </section>
+
+  <!-- AR Viewer -->
+  <div id="ar-viewer">
+   <model-viewer 
+    id="ar-model" 
+    src="" 
+    ar 
+    ar-modes="scene-viewer quick-look webxr" 
+    ar-scale="auto"
+    auto-rotate 
+    camera-controls 
+    style="background:#fff;">
 </model-viewer>
+<p id="ar-instruction" style="position:absolute;top:10px;left:10px;color:black;z-index:10001;display:none;">
+  Point your camera at a flat surface to place the dish.
+</p>
 
-<script>
-  const modelViewer = document.querySelector('#model');
+    <button id="ar-close" onclick="closeAR()">Close</button>
+  </div>
 
-  // Optional: log AR session start
-  modelViewer.addEventListener('ar-status', (event) => {
-    console.log('AR status:', event.detail.status);
-  });
+  <script>
+    const cart = [];
+    let total = 0;
 
-  // Optional: tap-to-place feedback
-  modelViewer.addEventListener('ar-tracking', () => {
-    console.log('Plane detected. You can place your object now.');
-  });
-</script>
+ 
+const indianDishes = [
+  { name: "Butter Chicken", price: 250, allergens: ["dairy"], model: "butter-chicken", img: "images/butter.jpeg" },
+  { name: "Paneer Tikka", price: 200, allergens: ["dairy"], model: "paneer-tikka", img: "images/paneer.jpeg" },
+  { name: "Biryani", price: 220, allergens: ["nuts"], model: "biryani", img: "images/briyani.jpeg" },
+  { name: "Chole Bhature", price: 180, allergens: [], model: "chole-bhature", img: "images/puri.jpeg" },
+  { name: "Masala Dosa", price: 150, allergens: [], model: "masala-dosa", img: "images/masala dosa.jpeg" }
+];
 
+const chineseDishes = [
+  { name: "Chicken Manchurian", price: 230, allergens: [], model: "chicken-manchurian", img: "images/chinese/chicken-manchurian.jpeg" },
+  { name: "Veg Hakka Noodles", price: 180, allergens: [], model: "hakka-noodles", img: "images/chinese/hakka-noodles.jpeg" },
+  { name: "Spring Rolls", price: 160, allergens: ["nuts"], model: "spring-rolls", img: "images/chinese/spring-rolls.jpeg" },
+  { name: "Chilli Paneer", price: 200, allergens: ["dairy"], model: "chilli-paneer", img: "images/chinese/chilli-paneer.jpeg" },
+  { name: "Fried Rice", price: 170, allergens: [], model: "fried-rice", img: "images/chinese/fried-rice.jpeg" },
+  { name: "Momos", price: 190, allergens: [], model: "momos", img: "images/chinese/momos.jpeg" }
+];
+
+const koreanDishes = [
+  { name: "Bibimbap", price: 260, allergens: [], model: "bibimbap", img: "images/korean/bibimbap.jpeg" },
+  { name: "Kimchi Fried Rice", price: 200, allergens: [], model: "kimchi-rice", img: "images/korean/kimchi-fried-rice.jpeg" },
+  { name: "Tteokbokki", price: 210, allergens: [], model: "tteokbokki", img: "images/korean/tteokbokki.jpeg" },
+  { name: "Korean Fried Chicken", price: 270, allergens: [], model: "fried-chicken", img: "images/korean/korean-fried-chicken.jpeg" },
+  { name: "Bulgogi", price: 280, allergens: [], model: "bulgogi", img: "images/korean/bulgogi.jpeg" }
+];
+
+const italianDishes = [
+  { name: "Pizza", price: 250, allergens: ["dairy"], model: "pizza", img: "images/italian/pizza.jpeg" },
+  { name: "Pasta", price: 220, allergens: ["dairy"], model: "pasta", img: "images/italian/pasta.jpeg" }
+];
+
+const dessertDishes = [
+  { name: "Pudding", price: 180, allergens: ["dairy"], model: "pudding", img: "images/desserts/pudding.jpeg" },
+  { name: "Brownie", price: 150, allergens: ["nuts", "dairy"], model: "brownie", img: "images/desserts/brownie.jpeg" },
+  { name: "Ice Cream", price: 120, allergens: ["dairy"], model: "ice-cream", img: "images/desserts/ice-cream.jpeg" }
+];
+
+    function hideAll() {
+      document.querySelector('.home').style.display = 'none';
+      document.querySelector('.menu').style.display = 'none';
+      document.querySelectorAll('.dishes').forEach(d => d.style.display = 'none');
+      document.querySelector('.cart').style.display = 'none';
+      document.querySelector('.payment').style.display = 'none';
+      document.querySelector('.thankyou').style.display = 'none';
+      document.getElementById('ar-viewer').style.display = 'none';
+    }
+
+    function goHome() { hideAll(); document.querySelector('.home').style.display = 'block'; }
+    function showMenu() { hideAll(); document.querySelector('.menu').style.display = 'block'; }
+    function showDishes(cuisine) { hideAll(); document.getElementById(cuisine).style.display = 'block'; }
+
+    function populateCuisine(containerId, dishes) {
+      const container = document.getElementById(`${containerId}-container`);
+      container.innerHTML = '';
+
+      const nutFree = document.getElementById('filter-nuts').checked;
+      const dairyFree = document.getElementById('filter-dairy').checked;
+
+      dishes.filter(d => {
+        return (!nutFree || !d.allergens.includes('nuts')) && (!dairyFree || !d.allergens.includes('dairy'));
+    }).forEach(({ name, price, model, allergens, img }) => {
+  const card = document.createElement('div');
+  card.className = 'dish-card';
+  card.innerHTML = `
+     <img src="${img ? img : 'images/default.png'}" alt="${name}">
+     <h4>${name}</h4>
+     <p>₹${price}</p>
+     <p>${allergens.length ? allergens.map(tag => `<span class='badge'>${tag}</span>`).join(' ') : '<span class="badge">No common allergens</span>'}</p>
+     <div class="rating" data-name="${name}">
+       ${[1,2,3,4,5].map(n => `<span onclick="rateDish('${name}', ${n})">★</span>`).join('')}
+     </div>
+     <div style="padding:0 8px;">
+       <button onclick="addToCart('${name}', ${price})">Add to Cart</button>
+       <button onclick="showAR('${model}')">3D View</button>
+     </div>
+  `;
+  container.appendChild(card);
+});
+
+    }
+
+    function rateDish(dishName, stars) {
+      const allRatings = document.querySelectorAll(`.rating[data-name='${dishName}'] span`);
+      allRatings.forEach((star, index) => {
+        star.classList.toggle('active', index < stars);
+      });
+      alert(`You rated ${dishName} with ${stars} stars!`);
+    }
+
+    function addToCart(item, price) {
+      cart.push({ item, price });
+      total += price;
+      alert(`${item} added to cart!`);
+    }
+
+    function removeFromCart(index) {
+      total -= cart[index].price;
+      cart.splice(index, 1);
+      viewCart();
+    }
+
+    function viewCart() {
+      hideAll();
+      const cartList = document.getElementById('cart-items');
+      cartList.innerHTML = '';
+      cart.forEach(({ item, price }, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${item} - ₹${price} <button onclick="removeFromCart(${index})">Remove</button>`;
+        cartList.appendChild(li);
+      });
+      document.getElementById('total').textContent = total;
+      document.querySelector('.cart').style.display = 'block';
+    }
+    // Request camera permission for WebXR
+async function requestCameraPermission() {
+  if (navigator.xr) {
+    try {
+      const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (isSupported) {
+        console.log('AR supported! Ready to start AR.');
+      } else {
+        alert('AR not supported on this device/browser.');
+      }
+    } catch (err) {
+      console.error('Error checking AR support:', err);
+    }
+  } else {
+    alert('WebXR not supported in this browser.');
+  }
+}
+
+    function showPayment() { hideAll(); document.querySelector('.payment').style.display = 'block'; }
+    function finishOrder() { hideAll(); document.querySelector('.thankyou').style.display = 'block'; }
+
+ async function showAR(modelName) {
+  await requestCameraPermission(); // <-- new line to request camera
+  const arViewer = document.getElementById('ar-viewer');
+  const arModel = document.getElementById('ar-model');
+  arModel.setAttribute('src', modelName + '.glb');
+  arViewer.style.display = 'block';
+  document.getElementById('ar-instruction').style.display = 'block';
+
+}
+
+
+    function closeAR() {
+      const arModel = document.getElementById('ar-model');
+      arModel.removeAttribute('src');
+      document.getElementById('ar-viewer').style.display = 'none';
+      document.getElementById('ar-instruction').style.display = 'none';
+
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      populateCuisine('indian', indianDishes);
+      populateCuisine('chinese', chineseDishes);
+      populateCuisine('korean', koreanDishes);
+      populateCuisine('italian', italianDishes);
+      populateCuisine('desserts', dessertDishes);
+
+      document.getElementById('filter-nuts').addEventListener('change', () => {
+        populateCuisine('indian', indianDishes);
+        populateCuisine('chinese', chineseDishes);
+        populateCuisine('korean', koreanDishes);
+        populateCuisine('italian', italianDishes);
+        populateCuisine('desserts', dessertDishes);
+      });
+      document.getElementById('filter-dairy').addEventListener('change', () => {
+        populateCuisine('indian', indianDishes);
+        populateCuisine('chinese', chineseDishes);
+        populateCuisine('korean', koreanDishes);
+        populateCuisine('italian', italianDishes);
+        populateCuisine('desserts', dessertDishes);
+      });
+    });
+  </script>
 </body>
 </html>
