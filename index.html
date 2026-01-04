@@ -1,83 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZestyView AR Menu</title>
-
-<!-- FREE Google Model Viewer -->
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
-<style>
-body { font-family: Arial; margin:0; background:#fff8f0; text-align:center; }
-header { background:#ff6347; color:white; padding:15px; font-size:22px; }
-.menu { display:flex; flex-wrap:wrap; justify-content:center; padding:20px; }
-.card {
-  width:250px; margin:15px; background:white; border-radius:10px;
-  box-shadow:0 4px 8px rgba(0,0,0,0.1);
-}
-.card img { width:100%; height:160px; object-fit:cover; border-radius:10px 10px 0 0; }
-.card h3 { margin:10px 0 5px; }
-.card p { margin:5px; }
-.card button {
-  background:#ff6347; color:white; border:none;
-  padding:10px; margin:10px; border-radius:5px;
-}
-
-/* AR Overlay */
-#ar-viewer {
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:white;
-  z-index:9999;
-}
-#ar-viewer model-viewer {
-  width:100%;
-  height:100%;
-}
-#close-ar {
-  position:absolute;
-  top:20px; right:20px;
-  background:#ff6347; color:white;
-  padding:10px 15px; border:none;
-  border-radius:5px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR 3D Food Viewer</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    model-viewer {
+      width: 90%;
+      max-width: 600px;
+      height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+    .ar-button {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 18px;
+      background: #ff6347;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
-
 <body>
 
-<header>🍽️ ZestyView – AR Food Menu</header>
+<h2>🍕 View Your 3D Pizza in AR!</h2>
 
-<div class="menu">
-  <div class="card">
-    <img src="images/biryani.jpeg">
-    <h3>Biryani</h3>
-    <p>₹220</p>
-    <button onclick="openAR('biryani')">View in AR</button>
-  </div>
-
-  <div class="card">
-    <img src="images/pizza.jpeg">
-    <h3>Pizza</h3>
-    <p>₹250</p>
-    <button onclick="openAR('pizza')">View in AR</button>
-  </div>
-
-  <div class="card">
-    <img src="images/butter.jpeg">
-    <h3>Butter Chicken</h3>
-    <p>₹260</p>
-    <button onclick="openAR('butter-chicken')">View in AR</button>
-  </div>
-</div>
-
-<!-- AR VIEW -->
-<div id="ar-viewer">
-  <model-viewer
+<model-viewer
     id="model"
+    src="pizza.glb"
+    alt="Delicious 3D Pizza"
     ar
     ar-placement="floor"
     ar-modes="webxr scene-viewer quick-look"
@@ -85,26 +55,27 @@ header { background:#ff6347; color:white; padding:15px; font-size:22px; }
     auto-rotate
     shadow-intensity="1"
     exposure="1"
-    src="">
-  </model-viewer>
-
-  <button id="close-ar" onclick="closeAR()">Close</button>
-</div>
+    style="background-color: #ffffff;">
+    
+    <!-- AR BUTTON -->
+    <button slot="ar-button" class="ar-button">
+      👁️ View in your space
+    </button>
+</model-viewer>
 
 <script>
-function openAR(name) {
-  const viewer = document.getElementById("ar-viewer");
-  const model = document.getElementById("model");
-  model.src = "models/" + name + ".glb";
-  viewer.style.display = "block";
-}
+  const modelViewer = document.querySelector('#model');
 
-function closeAR() {
-  document.getElementById("ar-viewer").style.display = "none";
-  document.getElementById("model").src = "";
-}
+  // Optional: log AR session start
+  modelViewer.addEventListener('ar-status', (event) => {
+    console.log('AR status:', event.detail.status);
+  });
+
+  // Optional: tap-to-place feedback
+  modelViewer.addEventListener('ar-tracking', () => {
+    console.log('Plane detected. You can place your object now.');
+  });
 </script>
 
 </body>
 </html>
-
