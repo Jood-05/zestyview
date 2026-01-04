@@ -401,7 +401,7 @@ async function requestCameraPermission() {
   await requestCameraPermission(); // <-- new line to request camera
   const arViewer = document.getElementById('ar-viewer');
   const arModel = document.getElementById('ar-model');
-  arModel.setAttribute('src', modelName + '.glb');
+  arModel.setAttribute('src', 'models/' + modelName + '.glb');
   arViewer.style.display = 'block';
   document.getElementById('ar-instruction').style.display = 'block';
 
@@ -441,3 +441,4 @@ async function requestCameraPermission() {
   </script>
 </body>
 </html>
+
